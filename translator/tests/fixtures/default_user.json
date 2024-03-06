@@ -1,0 +1,15 @@
+[
+  {
+    "model": "translator.user",
+    "pk": 1,
+    "fields": {
+      "first_name": "John",
+      "last_name": "Doe",
+      "username": "@johndoe",
+      "email": "johndoe@example.org",
+      "bio": "Hello, I'm John Doe.",
+      "password": "pbkdf2_sha256$390000$ovocPWAgZ4nBcXI8ESBWzn$fRUaId8RBCvrCOpU2o8Wtuiz+7XbVbJj2QZ+9QCAz5s=",
+      "is_active": true
+    }
+  }
+]

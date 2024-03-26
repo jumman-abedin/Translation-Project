@@ -4,11 +4,12 @@ from transformers import AutoModelForSeq2SeqLM, DataCollatorForSeq2Seq, Seq2SeqT
 import numpy as np
 import evaluate
 
+dataset_name = "opus100"
 # Load the data set
-raw_datasets = load_dataset("kde4", "en-es")
+raw_datasets = load_dataset(dataset_name, "en-es")
 
 # Pre-process the data set
-model_marianMT = ""
+model_marianMT = "Helsinki-NLP/opus-mt-en-es"
 tokenizer = AutoTokenizer.from_pretrained(model_marianMT, use_fast=False)
 
 prefix = ""  # for mBART and MarianMT
@@ -16,7 +17,8 @@ max_input_length = 128
 max_target_length = 128
 source_lang = "en"
 target_lang = "es"
-model_name = 'Helsinki-NLP/opus-mt-en-es'
+model_name = "Helsinki-NLP/opus-mt-en-es"
+model_name_cleaned = model_name.replace('/', '-')
 
 
 def preprocess_function(examples):
@@ -92,6 +94,27 @@ trainer = Seq2SeqTrainer(
     tokenizer=tokenizer,
     compute_metrics=compute_metrics
 )
+
+before_training = trainer.evaluate(max_length=128)
+
+file = open(dataset_name + '-' + str(100) + '-' + model_name_cleaned +
+            '. txt', 'w')
+
+file.write(str(before_training))
+file.write('\n')
+file.close()
+
+
 trainer.train()
+trainer.push_to_hub ()
+
+
+after_training = trainer.evaluate(max_length=128)
+
+file = open(dataset_name + '-' + str(100) + '-' + model_name_cleaned +
+            '. txt', 'a')
+
+file.write(str(after_training))
+file.close()
 
 trainer.save_model()

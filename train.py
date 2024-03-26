@@ -8,7 +8,7 @@ import evaluate
 raw_datasets = load_dataset("kde4", "en-es")
 
 # Pre-process the data set
-model_marianMT = ""
+model_marianMT = "Helsinki-NLP/opus-mt-en-es"
 tokenizer = AutoTokenizer.from_pretrained(model_marianMT, use_fast=False)
 
 prefix = ""  # for mBART and MarianMT

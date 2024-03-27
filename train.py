@@ -3,22 +3,44 @@ from transformers import AutoModelForSeq2SeqLM, DataCollatorForSeq2Seq, Seq2SeqT
     AutoTokenizer
 import numpy as np
 import evaluate
+from transformers import MBart50TokenizerFast
+from transformers import MBartForConditionalGeneration
+import sys
 
+# select the model type from the following options (model_marianMT, model_mbart)
+model_type = "marianMT"
+max_input_length = 128
+max_target_length = 128
+source_lang = "es"
+target_lang = "en"
+
+# select the model name, name must match the model type.
+model_name = "Helsinki-NLP/opus-mt-es-en"
+model_name_cleaned = model_name.replace('/', '-')
+
+# select the dataset
 dataset_name = "opus100"
-# Load the data set
+
+# Load the data set along with soure and target language
 raw_datasets = load_dataset(dataset_name, "en-es")
 
 # Pre-process the data set
-model_marianMT = "Helsinki-NLP/opus-mt-en-es"
-tokenizer = AutoTokenizer.from_pretrained(model_marianMT, use_fast=False)
+if model_type == "marianMT":
+    model_marianMT = model_name
+    tokenizer = AutoTokenizer.from_pretrained(model_marianMT, use_fast=False)
 
-prefix = ""  # for mBART and MarianMT
-max_input_length = 128
-max_target_length = 128
-source_lang = "en"
-target_lang = "es"
-model_name = "Helsinki-NLP/opus-mt-en-es"
-model_name_cleaned = model_name.replace('/', '-')
+elif model_type == "mbart":
+    model_mbart = model_name
+    tokenizer = MBart50TokenizerFast.from_pretrained(model_mbart, src_lang="en_XX", tgt_lang="de_DE")
+
+else:
+    sys.exit("Invalid Model Type, selected model from these options: {marianMT, mbart}")
+
+# Now we will create a preprocessing function and apply it to all the data splits.
+# T5 model requires a special prefix to put before the inputs, you should adopt the following code for defining the prefix. For mBART and MarianMT prefixes will remain blank.
+
+
+prefix = ""  # For mBART and MarianMT prefixes will remain blank.
 
 
 def preprocess_function(examples):
@@ -39,7 +61,16 @@ small_train_dataset = tokenized_datasets["train"].shuffle(seed=42).select(range(
 small_eval_dataset = tokenized_datasets["test"].shuffle(seed=42).select(range(1000))
 
 # Train and fine-tune the model
-model = AutoModelForSeq2SeqLM.from_pretrained(model_marianMT)
+# We will be using AutoModelForSeq2SeqLM for T5 and MarianMT and MBartForConditionalGeneration for mBART to cache or download the models:
+if model_type == "marianMT":
+    model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
+
+elif model_type == "mbart":
+    model = MBartForConditionalGeneration.from_pretrained(model_name)
+
+else:
+    sys.exit("Invalid Model Type, selected model from these options: {marianMT, mbart}")
+
 
 args = Seq2SeqTrainingArguments(
     f"{model_name}-finetuned-{source_lang}-to-{target_lang}",
@@ -78,7 +109,7 @@ def compute_metrics(eval_preds):
     result = metric.compute(predictions=decoded_preds, references=decoded_labels)
     meteor_result = meteor.compute(predictions=decoded_preds, references=decoded_labels)
     prediction_lens = [np.count_nonzero(pred != tokenizer.pad_token_id) for pred in preds]
-    result = {'bleu': result['score']}
+    result = {'sacrebleu': result['score']}
     result["gen_len"] = np.mean(prediction_lens)
     result["meteor"] = meteor_result["meteor"]
     result = {k: round(v, 4) for k, v in result.items()}
@@ -104,10 +135,7 @@ file.write(str(before_training))
 file.write('\n')
 file.close()
 
-
 trainer.train()
-trainer.push_to_hub ()
-
 
 after_training = trainer.evaluate(max_length=128)
 

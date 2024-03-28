@@ -15,7 +15,7 @@ source_lang = "es"
 target_lang = "en"
 
 # select the model name, name must match the model type.
-model_name = "Helsinki-NLP/opus-mt-es-en"
+model_name = "Helsinki-NLP/opus-mt-mul-en"
 model_name_cleaned = model_name.replace('/', '-')
 
 # select the dataset

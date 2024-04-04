@@ -27,7 +27,7 @@ class TranslationView(LoginRequiredMixin, ListView):
     context_object_name = 'translations'
 
     def get_queryset(self):
-        """Return the user's feed."""
+        """Return the user's translation page."""
         current_user = self.request.user
         authors = list(current_user.followees.all()) + [current_user]
         posts = Translation.objects.filter(author__in=authors)

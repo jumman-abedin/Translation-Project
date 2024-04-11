@@ -19,15 +19,18 @@ $ pip3 install -r requirements.txt
 Migrate the database:
 
 ```
+$ python3 manage.py makemigrations
+```
+
+```
 $ python3 manage.py migrate
 ```
 
-Seed the development database with:
+run the server with:
 
 ```
-$ python3 manage.py seed
+$ python3 manage.py  runserver
 ```
-
 Run all tests with:
 ```
 $ python3 manage.py test
